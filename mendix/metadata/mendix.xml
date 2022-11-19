@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:DataServices>
+    <Schema Namespace="DefaultNamespace" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityType Name="MyProduce">
+        <Key>
+          <PropertyRef Name="Name" />
+        </Key>
+        <Property Name="Name" Type="Edm.String" Nullable="false" MaxLength="200" />
+        <Property Name="Size" Type="Edm.Int64" />
+      </EntityType>
+      <EntityContainer Name="Entities">
+        <EntitySet Name="MyProduces" EntityType="DefaultNamespace.MyProduce">
+          <Annotation Term="Org.OData.Capabilities.V1.InsertRestrictions">
+            <Record>
+              <PropertyValue Property="Insertable" Bool="true" />
+              <PropertyValue Property="MaxLevels" Int="0" />
+              <PropertyValue Property="TypecastSegmentSupported" Bool="false" />
+            </Record>
+          </Annotation>
+          <Annotation Term="Org.OData.Capabilities.V1.DeepInsertSupport">
+            <Record>
+              <PropertyValue Property="Supported" Bool="false" />
+              <PropertyValue Property="ContentIDSupported" Bool="false" />
+            </Record>
+          </Annotation>
+          <Annotation Term="Org.OData.Capabilities.V1.UpdateRestrictions">
+            <Record>
+              <PropertyValue Property="Updatable" Bool="true" />
+              <PropertyValue Property="DeltaUpdateSupported" Bool="true" />
+              <PropertyValue Property="UpdateMethod">
+                <EnumMember>Org.OData.Capabilities.V1.HttpMethod/PATCH</EnumMember>
+              </PropertyValue>
+              <PropertyValue Property="FilterSegmentSupported" Bool="false" />
+              <PropertyValue Property="TypecastSegmentSupported" Bool="false" />
+              <PropertyValue Property="NonUpdatableProperties">
+                <Collection>
+                  <PropertyPath>Name</PropertyPath>
+                </Collection>
+              </PropertyValue>
+              <PropertyValue Property="MaxLevels" Int="0" />
+            </Record>
+          </Annotation>
+          <Annotation Term="Org.OData.Capabilities.V1.DeleteRestrictions">
+            <Record>
+              <PropertyValue Property="Deletable" Bool="true" />
+              <PropertyValue Property="MaxLevels" Int="0" />
+              <PropertyValue Property="FilterSegmentSupported" Bool="false" />
+              <PropertyValue Property="TypecastSegmentSupported" Bool="false" />
+            </Record>
+          </Annotation>
+          <Annotation Term="Org.OData.Capabilities.V1.FilterRestrictions">
+            <Record>
+              <PropertyValue Property="Filterable" Bool="true" />
+            </Record>
+          </Annotation>
+          <Annotation Term="Org.OData.Capabilities.V1.SortRestrictions">
+            <Record>
+              <PropertyValue Property="Sortable" Bool="true" />
+            </Record>
+          </Annotation>
+          <Annotation Term="Org.OData.Capabilities.V1.CountRestrictions">
+            <Record>
+              <PropertyValue Property="Countable" Bool="true" />
+            </Record>
+          </Annotation>
+          <Annotation Term="Org.OData.Capabilities.V1.SearchRestrictions">
+            <Record>
+              <PropertyValue Property="Searchable" Bool="false" />
+            </Record>
+          </Annotation>
+        </EntitySet>
+        <Annotation Term="Org.OData.Capabilities.V1.BatchSupported" Bool="false" />
+        <Annotation Term="Org.OData.Capabilities.V1.CrossJoinSupported" Bool="false" />
+        <Annotation Term="Org.OData.Capabilities.V1.QuerySegmentSupported" Bool="true" />
+        <Annotation Term="Org.OData.Capabilities.V1.SupportedFormats">
+          <Collection>
+            <String>application/json</String>
+          </Collection>
+        </Annotation>
+      </EntityContainer>
+    </Schema>
+    <Schema Namespace="Com.Mendix" Alias="Mendix" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <Term Name="IsAttribute" Type="Edm.Boolean" />
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

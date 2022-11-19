@@ -1,0 +1,58 @@
+<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">
+  <edmx:DataServices>
+    <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="OData.Demo">
+      <EntityType Name="Product">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Int32"/>
+        <Property Name="Name" Type="Edm.String"/>
+        <Property Name="Description" Type="Edm.String"/>
+        <NavigationProperty Name="Category" Type="OData.Demo.Category" Partner="Products"/>
+      </EntityType>
+      <EntityType Name="Category">
+        <Key>
+          <PropertyRef Name="ID"/>
+        </Key>
+        <Property Name="ID" Type="Edm.Int32"/>
+        <Property Name="Name" Type="Edm.String"/>
+        <NavigationProperty Name="Products" Type="Collection(OData.Demo.Product)" Partner="Category"/>
+      </EntityType>
+      <EntityContainer Name="Container">
+        <EntitySet Name="Products" EntityType="OData.Demo.Product">
+          <NavigationPropertyBinding Path="Category" Target="Categories"/>
+          <Annotation Term="Org.OData.Capabilities.V1.UpdateRestrictions">
+            <Record>
+              <PropertyValue Property="Updatable">
+                <Bool>true</Bool>
+              </PropertyValue>
+              <PropertyValue Property="DeltaUpdateSupported">
+                <Bool>true</Bool>
+              </PropertyValue>
+              <PropertyValue Property="UpdateMethod">
+                <EnumMember>Org.OData.Capabilities.V1.HttpMethod/PATCH</EnumMember>
+              </PropertyValue>
+              <PropertyValue Property="FilterSegmentSupported">
+                <Bool>false</Bool>
+              </PropertyValue>
+              <PropertyValue Property="TypecastSegmentSupported">
+                <Bool>false</Bool>
+              </PropertyValue>
+              <PropertyValue Property="NonUpdatableProperties">
+                <Collection>
+                  <PropertyPath>Name</PropertyPath>
+                </Collection>
+              </PropertyValue>
+              <PropertyValue Property="MaxLevels">
+                <Int>0</Int>
+              </PropertyValue>
+            </Record>
+          </Annotation>
+        </EntitySet>
+        <EntitySet Name="Categories" EntityType="OData.Demo.Category">
+          <NavigationPropertyBinding Path="Products" Target="Products"/>
+        </EntitySet>
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
