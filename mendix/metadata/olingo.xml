@@ -5,7 +5,7 @@
         <Key>
           <PropertyRef Name="ID"/>
         </Key>
-        <Property Name="ID" Type="Edm.Int32"/>
+        <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
         <Property Name="Name" Type="Edm.String"/>
         <Property Name="Description" Type="Edm.String"/>
         <NavigationProperty Name="Category" Type="OData.Demo.Category" Partner="Products"/>
@@ -14,7 +14,7 @@
         <Key>
           <PropertyRef Name="ID"/>
         </Key>
-        <Property Name="ID" Type="Edm.Int32"/>
+        <Property Name="ID" Type="Edm.Int32" Nullable="false"/>
         <Property Name="Name" Type="Edm.String"/>
         <NavigationProperty Name="Products" Type="Collection(OData.Demo.Product)" Partner="Category"/>
       </EntityType>

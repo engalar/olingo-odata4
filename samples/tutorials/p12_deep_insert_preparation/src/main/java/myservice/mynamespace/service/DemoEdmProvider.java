@@ -79,7 +79,7 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
     if (entityTypeName.equals(ET_PRODUCT_FQN)) {
       // create EntityType properties
       CsdlProperty id = new CsdlProperty().setName("ID")
-          .setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
+          .setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName()).setNullable(false);
       CsdlProperty name = new CsdlProperty().setName("Name")
           .setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
       CsdlProperty description = new CsdlProperty().setName("Description")
@@ -107,7 +107,8 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
     } else if (entityTypeName.equals(ET_CATEGORY_FQN)) {
       // create EntityType properties
       CsdlProperty id = new CsdlProperty().setName("ID")
-          .setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName());
+          .setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName())
+          .setNullable(false);
       CsdlProperty name = new CsdlProperty().setName("Name")
           .setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
 
