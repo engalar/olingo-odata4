@@ -44,6 +44,7 @@ public class DemoServlet extends HttpServlet {
 
   private static final long serialVersionUID = 1L;
   private static final Logger LOG = LoggerFactory.getLogger(DemoServlet.class);
+  private static Storage storage;
 
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -52,7 +53,6 @@ public class DemoServlet extends HttpServlet {
       ServiceMetadata edm = odata.createServiceMetadata(new DemoEdmProvider(), new ArrayList<EdmxReference>());
       
       HttpSession session = req.getSession(true);
-      Storage storage = (Storage) session.getAttribute(Storage.class.getName());
       if (storage == null) {
         storage = new Storage(odata, edm.getEdm());
         session.setAttribute(Storage.class.getName(), storage);
