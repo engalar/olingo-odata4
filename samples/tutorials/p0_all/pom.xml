@@ -19,8 +19,8 @@
     under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>my.group.id</groupId>
 	<artifactId>DemoService</artifactId>
@@ -29,11 +29,18 @@
 
 	<name>${project.artifactId} Webapp</name>
 
-    <build>
+	<build>
 		<finalName>DemoService</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>9.4.49.v20220914</version>
+			</plugin>
+		</plugins>
 	</build>
 
-    <properties>
+	<properties>
 		<javax.version>2.5</javax.version>
 		<odata.version>4.10.0-SNAPSHOT</odata.version>
 		<slf4j.version>1.7.7</slf4j.version>

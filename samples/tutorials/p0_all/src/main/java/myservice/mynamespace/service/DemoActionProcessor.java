@@ -47,12 +47,10 @@ public class DemoActionProcessor implements ActionVoidProcessor {
     this.storage = storage;
   }
 
-  @Override
   public void init(final OData odata, final ServiceMetadata serviceMetadata) {
     this.odata = odata;
   }
 
-  @Override
   public void processActionVoid(ODataRequest request, ODataResponse response, UriInfo uriInfo,
       ContentType requestFormat) throws ODataApplicationException, ODataLibraryException {
 

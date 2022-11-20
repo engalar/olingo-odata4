@@ -49,12 +49,10 @@ public class DemoBatchProcessor implements BatchProcessor {
     this.storage = storage;
   }
 
-  @Override
   public void init(final OData odata, final ServiceMetadata serviceMetadata) {
     this.odata = odata;
   }
 
-  @Override
   public void processBatch(final BatchFacade facade, final ODataRequest request, final ODataResponse response)
       throws ODataApplicationException, ODataLibraryException {
     
@@ -89,7 +87,6 @@ public class DemoBatchProcessor implements BatchProcessor {
   }
   
   
-  @Override
   public ODataResponsePart processChangeSet(final BatchFacade facade, final List<ODataRequest> requests)
       throws ODataApplicationException, ODataLibraryException {
     /* 

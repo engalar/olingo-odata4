@@ -94,8 +94,12 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
       CsdlNavigationProperty navProp = new CsdlNavigationProperty().setName("Category")
           .setType(ET_CATEGORY_FQN).setNullable(true)
           .setPartner("Products");
+      CsdlNavigationProperty navProp2 = new CsdlNavigationProperty().setName("Category2")
+          .setType(ET_CATEGORY_FQN).setNullable(true)
+          .setPartner("Products");
       List<CsdlNavigationProperty> navPropList = new ArrayList<CsdlNavigationProperty>();
       navPropList.add(navProp);
+      navPropList.add(navProp2);
 
       // configure EntityType
       entityType = new CsdlEntityType();
@@ -106,6 +110,9 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
 
     } else if (entityTypeName.equals(ET_CATEGORY_FQN)) {
       // create EntityType properties
+      CsdlProperty mxid = new CsdlProperty().setName("@id")
+          .setType(EdmPrimitiveTypeKind.String.getFullQualifiedName())
+          .setNullable(false);
       CsdlProperty id = new CsdlProperty().setName("ID")
           .setType(EdmPrimitiveTypeKind.Int32.getFullQualifiedName())
           .setNullable(false);
@@ -126,7 +133,7 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
       // configure EntityType
       entityType = new CsdlEntityType();
       entityType.setName(ET_CATEGORY_NAME);
-      entityType.setProperties(Arrays.asList(id, name));
+      entityType.setProperties(Arrays.asList(mxid, id, name));
       entityType.setKey(Arrays.asList(propertyRef));
       entityType.setNavigationProperties(navPropList);
     }
