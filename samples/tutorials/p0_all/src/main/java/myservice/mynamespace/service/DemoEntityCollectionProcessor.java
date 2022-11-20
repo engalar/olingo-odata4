@@ -25,12 +25,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.olingo.commons.api.Constants;
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
+import org.apache.olingo.commons.api.data.Link;
+import org.apache.olingo.commons.api.edm.EdmElement;
 import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
+import org.apache.olingo.commons.api.edm.EdmNavigationPropertyBinding;
 import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpHeader;
@@ -71,72 +75,74 @@ import myservice.mynamespace.util.Util;
 
 public class DemoEntityCollectionProcessor implements EntityCollectionProcessor {
 
-	private OData odata;
-	private ServiceMetadata serviceMetadata;
-	private Storage storage;
+  private OData odata;
+  private ServiceMetadata serviceMetadata;
+  private Storage storage;
 
-	public DemoEntityCollectionProcessor(Storage storage) {
-		this.storage = storage;
-	}
+  public DemoEntityCollectionProcessor(Storage storage) {
+    this.storage = storage;
+  }
 
-	public void init(OData odata, ServiceMetadata serviceMetadata) {
-		this.odata = odata;
-		this.serviceMetadata = serviceMetadata;
-	}
+  public void init(OData odata, ServiceMetadata serviceMetadata) {
+    this.odata = odata;
+    this.serviceMetadata = serviceMetadata;
+  }
 
-	public void readEntityCollection(ODataRequest request, ODataResponse response,
+  public void readEntityCollection(ODataRequest request, ODataResponse response,
       UriInfo uriInfo, ContentType responseFormat)
       throws ODataApplicationException, SerializerException {
-    
+
     final UriResource firstResourceSegment = uriInfo.getUriResourceParts().get(0);
-    
-    if(firstResourceSegment instanceof UriResourceEntitySet) {
+
+    if (firstResourceSegment instanceof UriResourceEntitySet) {
       readEntityCollectionInternal(request, response, uriInfo, responseFormat);
-    } else if(firstResourceSegment instanceof UriResourceFunction) {
+    } else if (firstResourceSegment instanceof UriResourceFunction) {
       readFunctionImportCollection(request, response, uriInfo, responseFormat);
     } else {
-      throw new ODataApplicationException("Not implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), 
+      throw new ODataApplicationException("Not implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(),
           Locale.ENGLISH);
     }
   }
-	
-	private void readFunctionImportCollection(final ODataRequest request, final ODataResponse response, 
+
+  private void readFunctionImportCollection(final ODataRequest request, final ODataResponse response,
       final UriInfo uriInfo, final ContentType responseFormat) throws ODataApplicationException, SerializerException {
-    
-    // 1st step: Analyze the URI and fetch the entity collection returned by the function import
+
+    // 1st step: Analyze the URI and fetch the entity collection returned by the
+    // function import
     // Function Imports are always the first segment of the resource path
     final UriResource firstSegment = uriInfo.getUriResourceParts().get(0);
-    
-    if(!(firstSegment instanceof UriResourceFunction)) {
-      throw new ODataApplicationException("Not implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), 
+
+    if (!(firstSegment instanceof UriResourceFunction)) {
+      throw new ODataApplicationException("Not implemented", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(),
           Locale.ENGLISH);
     }
-    
+
     final UriResourceFunction uriResourceFunction = (UriResourceFunction) firstSegment;
     final EntityCollection entityCol = storage.readFunctionImportCollection(uriResourceFunction, serviceMetadata);
-    
+
     // 2nd step: Serialize the response entity
     final EdmEntityType edmEntityType = (EdmEntityType) uriResourceFunction.getFunction().getReturnType().getType();
     final ContextURL contextURL = ContextURL.with().asCollection().type(edmEntityType).build();
     EntityCollectionSerializerOptions opts = EntityCollectionSerializerOptions.with().contextURL(contextURL).build();
     final ODataSerializer serializer = odata.createSerializer(responseFormat);
-    final SerializerResult serializerResult = serializer.entityCollection(serviceMetadata, edmEntityType, entityCol, 
-        opts); 
+    final SerializerResult serializerResult = serializer.entityCollection(serviceMetadata, edmEntityType, entityCol,
+        opts);
 
     // 3rd configure the response object
     response.setContent(serializerResult.getContent());
     response.setStatusCode(HttpStatusCode.OK.getStatusCode());
     response.setHeader(HttpHeader.CONTENT_TYPE, responseFormat.toContentTypeString());
   }
-	
-	private void readEntityCollectionInternal(ODataRequest request, ODataResponse response, UriInfo uriInfo,
-	    ContentType responseFormat) throws ODataApplicationException, SerializerException {
-	  
-	  // Read the collection or process ONE navigation property
-	  EdmEntitySet edmEntitySet = null; // we'll need this to build the ContextURL
+
+  private void readEntityCollectionInternal(ODataRequest request, ODataResponse response, UriInfo uriInfo,
+      ContentType responseFormat) throws ODataApplicationException, SerializerException {
+
+    // Read the collection or process ONE navigation property
+    EdmEntitySet edmEntitySet = null; // we'll need this to build the ContextURL
     EntityCollection entityCollection = null; // we'll need this to set the response body
 
-    // 1st retrieve the requested EntitySet from the uriInfo (representation of the parsed URI)
+    // 1st retrieve the requested EntitySet from the uriInfo (representation of the
+    // parsed URI)
     List<UriResource> resourceParts = uriInfo.getUriResourceParts();
     int segmentCount = resourceParts.size();
 
@@ -152,7 +158,8 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
     if (segmentCount == 1) { // this is the case for: DemoService/DemoService.svc/Categories
       edmEntitySet = startEdmEntitySet; // the response body is built from the first (and only) entitySet
 
-      // 2nd: fetch the data from backend for this requested EntitySetName and deliver as EntitySet
+      // 2nd: fetch the data from backend for this requested EntitySetName and deliver
+      // as EntitySet
       entityCollection = storage.readEntitySetData(startEdmEntitySet);
     } else if (segmentCount == 2) { // in case of navigation: DemoService.svc/Categories(3)/Products
 
@@ -166,7 +173,8 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
         // 2nd: fetch the data from backend
         // first fetch the entity where the first segment of the URI points to
         List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
-        // e.g. for Categories(3)/Products we have to find the single entity: Category with ID 3
+        // e.g. for Categories(3)/Products we have to find the single entity: Category
+        // with ID 3
         Entity sourceEntity = storage.readEntityData(startEdmEntitySet, keyPredicates);
         // error handling for e.g. DemoService.svc/Categories(99)/Products
         if (sourceEntity == null) {
@@ -184,7 +192,7 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
     }
     List<Entity> modifiedEntityList = entityCollection.getEntities();
     EntityCollection modifiedEntityCollection = new EntityCollection();
-    
+
     // 3rd: Apply system query option
     // The system query options have to be applied in a defined order
     // 3.1.) $filter
@@ -200,58 +208,121 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
     // 3.6.) Server driven paging (not part of this tutorial)
     // 3.7.) $expand
     // Nested system query options are not implemented
-    validateNestedExpxandSystemQueryOptions(uriInfo.getExpandOption());
+    // validateNestedExpxandSystemQueryOptions(uriInfo.getExpandOption());
+    // http://localhost:8080/DemoService.svc/Products?$select=ID,Name,Description&$filter=(ID eq 0)&$expand=Category($select=ID)
+    ExpandOption expandOption = uriInfo.getExpandOption();
+    if (expandOption != null) {
+      // retrieve the EdmNavigationProperty from the expand expression
+      // Note: in our example, we have only one NavigationProperty, so we can directly
+      // access it
+      EdmNavigationProperty edmNavigationProperty = null;
+      ExpandItem expandItem = expandOption.getExpandItems().get(0);
+      if (expandItem.isStar()) {
+        List<EdmNavigationPropertyBinding> bindings = edmEntitySet.getNavigationPropertyBindings();
+        // we know that there are navigation bindings
+        // however normally in this case a check if navigation bindings exists is done
+        if (!bindings.isEmpty()) {
+          // can in our case only be 'Category' or 'Products', so we can take the first
+          EdmNavigationPropertyBinding binding = bindings.get(0);
+          EdmElement property = edmEntitySet.getEntityType().getProperty(binding.getPath());
+          // we don't need to handle error cases, as it is done in the Olingo library
+          if (property instanceof EdmNavigationProperty) {
+            edmNavigationProperty = (EdmNavigationProperty) property;
+          }
+        }
+      } else {
+        // can be 'Category' or 'Products', no path supported
+        UriResource uriResource2 = expandItem.getResourcePath().getUriResourceParts().get(0);
+        // we don't need to handle error cases, as it is done in the Olingo library
+        if (uriResource2 instanceof UriResourceNavigation) {
+          edmNavigationProperty = ((UriResourceNavigation) uriResource2).getProperty();
+        }
+      }
+
+      // can be 'Category' or 'Products', no path supported
+      // we don't need to handle error cases, as it is done in the Olingo library
+      if (edmNavigationProperty != null) {
+        String navPropName = edmNavigationProperty.getName();
+        EdmEntityType expandEdmEntityType = edmNavigationProperty.getType();
+
+        List<Entity> entityList = entityCollection.getEntities();
+        for (Entity entity : entityList) {
+          Link link = new Link();
+          link.setTitle(navPropName);
+          link.setType(Constants.ENTITY_NAVIGATION_LINK_TYPE);
+          link.setRel(Constants.NS_ASSOCIATION_LINK_REL + navPropName);
+
+          if (edmNavigationProperty.isCollection()) { // in case of Categories/$expand=Products
+            // fetch the data for the $expand (to-many navigation) from backend
+            EntityCollection expandEntityCollection = storage.getRelatedEntityCollection(entity, expandEdmEntityType);
+            link.setInlineEntitySet(expandEntityCollection);
+            link.setHref(expandEntityCollection.getId().toASCIIString());
+          } else { // in case of Products?$expand=Category
+            // fetch the data for the $expand (to-one navigation) from backend
+            // here we get the data for the expand
+            Entity expandEntity = storage.getRelatedEntity(entity, expandEdmEntityType);
+            link.setInlineEntity(expandEntity);
+            link.setHref(expandEntity.getId().toASCIIString());
+          }
+
+          // set the link - containing the expanded data - to the current entity
+          entity.getNavigationLinks().add(link);
+        }
+      }
+    }
     // 3.8.) $select
     SelectOption selectOption = uriInfo.getSelectOption();
-    
+
     // Set the (may) modified entityList to the new entity collection
     modifiedEntityCollection.getEntities().addAll(modifiedEntityList);
-    
+
     // 4th: create a serializer based on the requested format (json)
     ODataSerializer serializer = odata.createSerializer(responseFormat);
-    
+
     // we need the property names of the $select, in order to build the context URL
     EdmEntityType edmEntityType = edmEntitySet.getEntityType();
     String selectList = odata.createUriHelper()
-                             .buildContextURLSelectList(edmEntityType, uriInfo.getExpandOption(), selectOption);
+        .buildContextURLSelectList(edmEntityType, uriInfo.getExpandOption(), selectOption);
     ContextURL contextUrl = ContextURL.with().entitySet(edmEntitySet).selectList(selectList).build();
 
-    // adding the selectOption to the serializerOpts will actually tell the lib to do the job
+    // adding the selectOption to the serializerOpts will actually tell the lib to
+    // do the job
     final String id = request.getRawBaseUri() + "/" + edmEntitySet.getName();
     EntityCollectionSerializerOptions opts = EntityCollectionSerializerOptions.with()
-                                                                              .contextURL(contextUrl)
-                                                                              .count(uriInfo.getCountOption())
-                                                                              .select(selectOption)
-                                                                              .expand(uriInfo.getExpandOption())
-                                                                              .id(id)
-                                                                              .build();
+        .contextURL(contextUrl)
+        .count(uriInfo.getCountOption())
+        .select(selectOption)
+        .expand(uriInfo.getExpandOption())
+        .id(id)
+        .build();
 
     // and serialize the content: transform from the EntitySet object to InputStream
     SerializerResult serializerResult = serializer.entityCollection(serviceMetadata, edmEntityType,
-                                                                    modifiedEntityCollection, opts);
+        modifiedEntityCollection, opts);
     InputStream serializedContent = serializerResult.getContent();
 
     // 5th: configure the response object: set the body, headers and status code
     response.setContent(serializedContent);
     response.setStatusCode(HttpStatusCode.OK.getStatusCode());
     response.setHeader(HttpHeader.CONTENT_TYPE, responseFormat.toContentTypeString());
-	}
-	
+  }
+
   private List<Entity> applyTopQueryOption(List<Entity> entityList, TopOption topOption)
       throws ODataApplicationException {
 
     if (topOption != null) {
       int topNumber = topOption.getValue();
       if (topNumber >= 0) {
-        if(topNumber <= entityList.size()) {
+        if (topNumber <= entityList.size()) {
           entityList = entityList.subList(0, topNumber);
-        }  // else the client has requested more entities than available => return what we have
+        } // else the client has requested more entities than available => return what we
+          // have
       } else {
         throw new ODataApplicationException("Invalid value for $top", HttpStatusCode.BAD_REQUEST.getStatusCode(),
             Locale.ROOT);
       }
     }
-    
+
     return entityList;
   }
 
@@ -261,7 +332,7 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
     if (skipOption != null) {
       int skipNumber = skipOption.getValue();
       if (skipNumber >= 0) {
-        if(skipNumber <= entityList.size()) {
+        if (skipNumber <= entityList.size()) {
           entityList = entityList.subList(skipNumber, entityList.size());
         } else {
           // The client skipped all entities
@@ -272,21 +343,22 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
             Locale.ROOT);
       }
     }
-    
+
     return entityList;
   }
 
-  private List<Entity> applyCountQueryOption(EntityCollection entityCollection, List<Entity> modifiedEntityList, 
+  private List<Entity> applyCountQueryOption(EntityCollection entityCollection, List<Entity> modifiedEntityList,
       CountOption countOption) {
 
-    // handle $count: always return the original number of entities, without considering $top and $skip
+    // handle $count: always return the original number of entities, without
+    // considering $top and $skip
     if (countOption != null) {
       boolean isCount = countOption.getValue();
       if (isCount) {
         entityCollection.setCount(modifiedEntityList.size());
       }
     }
-    
+
     return modifiedEntityList;
   }
 
@@ -303,7 +375,7 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
           EdmProperty edmProperty = ((UriResourcePrimitiveProperty) uriResource).getProperty();
           final String sortPropertyName = edmProperty.getName();
 
-          // do the sorting for the list of entities  
+          // do the sorting for the list of entities
           Collections.sort(entityList, new Comparator<Entity>() {
 
             // we delegate the sorting to the native sorter of Integer and String
@@ -322,7 +394,7 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
                 compareResult = propertyValue1.compareTo(propertyValue2);
               }
 
-              // if 'desc' is specified in the URI, change the order of the list 
+              // if 'desc' is specified in the URI, change the order of the list
               if (orderByItem.isDescending()) {
                 return -compareResult; // just convert the result to negative value to change the order
               }
@@ -333,32 +405,32 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
         }
       }
     }
-    
+
     return entityList;
   }
-  
-  private void validateNestedExpxandSystemQueryOptions(final ExpandOption expandOption) 
+
+  private void validateNestedExpxandSystemQueryOptions(final ExpandOption expandOption)
       throws ODataApplicationException {
-    if(expandOption == null) {
+    if (expandOption == null) {
       return;
     }
-    
-    for(final ExpandItem item : expandOption.getExpandItems()) {
-      if(    item.getCountOption() != null 
-          || item.getFilterOption() != null 
+
+    for (final ExpandItem item : expandOption.getExpandItems()) {
+      if (item.getCountOption() != null
+          || item.getFilterOption() != null
           || item.getLevelsOption() != null
           || item.getOrderByOption() != null
           || item.getSearchOption() != null
           || item.getSelectOption() != null
           || item.getSkipOption() != null
           || item.getTopOption() != null) {
-        
-        throw new ODataApplicationException("Nested expand system query options are not implemented", 
-            HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(),Locale.ENGLISH);
+
+        throw new ODataApplicationException("Nested expand system query options are not implemented",
+            HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
       }
     }
   }
-  
+
   private List<Entity> applyFilterQueryOption(List<Entity> entityList, FilterOption filterOption)
       throws ODataApplicationException {
 
@@ -367,9 +439,11 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
         Iterator<Entity> entityIterator = entityList.iterator();
 
         // Evaluate the expression for each entity
-        // If the expression is evaluated to "true", keep the entity otherwise remove it from the entityList
+        // If the expression is evaluated to "true", keep the entity otherwise remove it
+        // from the entityList
         while (entityIterator.hasNext()) {
-          // To evaluate the the expression, create an instance of the Filter Expression Visitor and pass
+          // To evaluate the the expression, create an instance of the Filter Expression
+          // Visitor and pass
           // the current entity to the constructor
           Entity currentEntity = entityIterator.next();
           Expression filterExpression = filterOption.getExpression();
@@ -381,7 +455,8 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
           // The result of the filter expression must be of type Edm.Boolean
           if (visitorResult instanceof Boolean) {
             if (!Boolean.TRUE.equals(visitorResult)) {
-              // The expression evaluated to false (or null), so we have to remove the currentEntity from entityList
+              // The expression evaluated to false (or null), so we have to remove the
+              // currentEntity from entityList
               entityIterator.remove();
             }
           } else {
@@ -395,7 +470,7 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
             HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(), Locale.ENGLISH);
       }
     }
-    
+
     return entityList;
   }
 }

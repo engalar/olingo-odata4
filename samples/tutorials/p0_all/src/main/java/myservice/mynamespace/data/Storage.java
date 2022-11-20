@@ -38,6 +38,7 @@ import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmKeyPropertyRef;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
+import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.ex.ODataRuntimeException;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.api.http.HttpMethod;
@@ -58,29 +59,29 @@ public class Storage {
 
   /** Special property to store the media content **/
   private static final String MEDIA_PROPERTY_NAME = "$value";
-  
+
   final private TransactionalEntityManager manager;
   final private Edm edm;
   final private OData odata;
-  
+
   // represent our database
   public Storage(final OData odata, final Edm edm) {
     this.odata = odata;
     this.edm = edm;
     manager = new TransactionalEntityManager(edm);
-    
+
     final List<Entity> productList = manager.getEntityCollection(DemoEdmProvider.ES_PRODUCTS_NAME);
-    
+
     // creating some sample data
     initProductSampleData();
     initCategorySampleData();
     initAdvertisementSampleData();
-    
+
     linkProductsAndCategories(productList.size());
   }
 
   /* PUBLIC FACADE */
-  
+
   public void beginTransaction() {
     manager.beginTransaction();
   }
@@ -92,7 +93,7 @@ public class Storage {
   public void commitTransaction() {
     manager.commitTransaction();
   }
-  
+
   public Entity readFunctionImportEntity(final UriResourceFunction uriResourceFunction,
       final ServiceMetadata serviceMetadata) throws ODataApplicationException {
 
@@ -144,11 +145,11 @@ public class Storage {
   public void resetDataSet(final int amount) {
     // Replace the old lists with empty ones
     manager.clear();
-    
+
     // Create new sample data
     initProductSampleData();
     initCategorySampleData();
-    
+
     final List<Entity> productList = manager.getEntityCollection(DemoEdmProvider.ES_PRODUCTS_NAME);
     final List<Entity> categoryList = manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME);
 
@@ -164,7 +165,7 @@ public class Storage {
       categoryList.clear();
       categoryList.addAll(newCategoryList);
     }
-    
+
     linkProductsAndCategories(amount);
   }
 
@@ -174,7 +175,7 @@ public class Storage {
       return getEntityCollection(manager.getEntityCollection(DemoEdmProvider.ES_PRODUCTS_NAME));
     } else if (edmEntitySet.getName().equals(DemoEdmProvider.ES_CATEGORIES_NAME)) {
       return getEntityCollection(manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME));
-    } else if(edmEntitySet.getName().equals(DemoEdmProvider.ES_ADVERTISEMENTS_NAME)) {
+    } else if (edmEntitySet.getName().equals(DemoEdmProvider.ES_ADVERTISEMENTS_NAME)) {
       return getEntityCollection(manager.getEntityCollection(DemoEdmProvider.ES_ADVERTISEMENTS_NAME));
     }
 
@@ -190,7 +191,7 @@ public class Storage {
       return getEntity(edmEntityType, keyParams, manager.getEntityCollection(DemoEdmProvider.ES_PRODUCTS_NAME));
     } else if (edmEntitySet.getName().equals(DemoEdmProvider.ES_CATEGORIES_NAME)) {
       return getEntity(edmEntityType, keyParams, manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME));
-    } else if(edmEntitySet.getName().equals(DemoEdmProvider.ES_ADVERTISEMENTS_NAME)) {
+    } else if (edmEntitySet.getName().equals(DemoEdmProvider.ES_ADVERTISEMENTS_NAME)) {
       return getEntity(edmEntityType, keyParams, manager.getEntityCollection(DemoEdmProvider.ES_ADVERTISEMENTS_NAME));
     }
 
@@ -198,40 +199,40 @@ public class Storage {
   }
 
   // Navigation
-  
-  public Entity getRelatedEntity(Entity entity, UriResourceNavigation navigationResource) 
+
+  public Entity getRelatedEntity(Entity entity, UriResourceNavigation navigationResource)
       throws ODataApplicationException {
-    
+
     final EdmNavigationProperty edmNavigationProperty = navigationResource.getProperty();
-    
-    if(edmNavigationProperty.isCollection()) {
-      return Util.findEntity(edmNavigationProperty.getType(), getRelatedEntityCollection(entity, navigationResource), 
-         navigationResource.getKeyPredicates());
+
+    if (edmNavigationProperty.isCollection()) {
+      return Util.findEntity(edmNavigationProperty.getType(), getRelatedEntityCollection(entity, navigationResource),
+          navigationResource.getKeyPredicates());
     } else {
       final Link link = entity.getNavigationLink(edmNavigationProperty.getName());
       return link == null ? null : link.getInlineEntity();
     }
   }
-  
+
   public EntityCollection getRelatedEntityCollection(Entity entity, UriResourceNavigation navigationResource) {
     return getRelatedEntityCollection(entity, navigationResource.getProperty().getName());
   }
-  
+
   public EntityCollection getRelatedEntityCollection(Entity entity, String navigationPropertyName) {
     final Link link = entity.getNavigationLink(navigationPropertyName);
     return link == null ? new EntityCollection() : link.getInlineEntitySet();
   }
-  
-  public Entity createEntityData(EdmEntitySet edmEntitySet, Entity entityToCreate, String rawServiceUri) 
+
+  public Entity createEntityData(EdmEntitySet edmEntitySet, Entity entityToCreate, String rawServiceUri)
       throws ODataApplicationException {
 
     EdmEntityType edmEntityType = edmEntitySet.getEntityType();
 
     if (edmEntitySet.getName().equals(DemoEdmProvider.ES_PRODUCTS_NAME)) {
-      return createEntity(edmEntitySet, edmEntityType, entityToCreate, 
+      return createEntity(edmEntitySet, edmEntityType, entityToCreate,
           manager.getEntityCollection(DemoEdmProvider.ES_PRODUCTS_NAME), rawServiceUri);
-    } else if(edmEntitySet.getName().equals(DemoEdmProvider.ES_CATEGORIES_NAME)) {
-      return createEntity(edmEntitySet, edmEntityType, entityToCreate, 
+    } else if (edmEntitySet.getName().equals(DemoEdmProvider.ES_CATEGORIES_NAME)) {
+      return createEntity(edmEntitySet, edmEntityType, entityToCreate,
           manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME), rawServiceUri);
     }
 
@@ -245,15 +246,15 @@ public class Storage {
       HttpMethod httpMethod) throws ODataApplicationException {
 
     EdmEntityType edmEntityType = edmEntitySet.getEntityType();
-    
+
     if (edmEntitySet.getName().equals(DemoEdmProvider.ES_PRODUCTS_NAME)) {
-      updateEntity(edmEntityType, keyParams, updateEntity, httpMethod, 
+      updateEntity(edmEntityType, keyParams, updateEntity, httpMethod,
           manager.getEntityCollection(DemoEdmProvider.ES_PRODUCTS_NAME));
     } else if (edmEntitySet.getName().equals(DemoEdmProvider.ES_CATEGORIES_NAME)) {
-      updateEntity(edmEntityType, keyParams, updateEntity, httpMethod, 
+      updateEntity(edmEntityType, keyParams, updateEntity, httpMethod,
           manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME));
-    } else if(edmEntitySet.getName().equals(DemoEdmProvider.ES_ADVERTISEMENTS_NAME)) {
-      updateEntity(edmEntityType, keyParams, updateEntity, httpMethod, 
+    } else if (edmEntitySet.getName().equals(DemoEdmProvider.ES_ADVERTISEMENTS_NAME)) {
+      updateEntity(edmEntityType, keyParams, updateEntity, httpMethod,
           manager.getEntityCollection(DemoEdmProvider.ES_ADVERTISEMENTS_NAME));
     }
   }
@@ -267,125 +268,169 @@ public class Storage {
       deleteEntity(edmEntityType, keyParams, manager.getEntityCollection(DemoEdmProvider.ES_PRODUCTS_NAME));
     } else if (edmEntitySet.getName().equals(DemoEdmProvider.ES_CATEGORIES_NAME)) {
       deleteEntity(edmEntityType, keyParams, manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME));
-    } else if(edmEntitySet.getName().equals(DemoEdmProvider.ES_ADVERTISEMENTS_NAME)) {
+    } else if (edmEntitySet.getName().equals(DemoEdmProvider.ES_ADVERTISEMENTS_NAME)) {
       deleteEntity(edmEntityType, keyParams, manager.getEntityCollection(DemoEdmProvider.ES_ADVERTISEMENTS_NAME));
     }
   }
-  
+
   public byte[] readMedia(final Entity entity) {
     return (byte[]) entity.getProperty(MEDIA_PROPERTY_NAME).asPrimitive();
   }
-  
+
   public void updateMedia(final Entity entity, final String mediaContentType, final byte[] data) {
     entity.getProperties().remove(entity.getProperty(MEDIA_PROPERTY_NAME));
     entity.addProperty(new Property(null, MEDIA_PROPERTY_NAME, ValueType.PRIMITIVE, data));
     entity.setMediaContentType(mediaContentType);
   }
-  
-  public Entity createMediaEntity(final EdmEntityType edmEntityType, final String mediaContentType, 
+
+  public Entity createMediaEntity(final EdmEntityType edmEntityType, final String mediaContentType,
       final byte[] data) {
     Entity entity = null;
-    
-    if(edmEntityType.getName().equals(DemoEdmProvider.ET_ADVERTISEMENT_NAME)) {
+
+    if (edmEntityType.getName().equals(DemoEdmProvider.ET_ADVERTISEMENT_NAME)) {
       entity = new Entity();
       entity.addProperty(new Property(null, "ID", ValueType.PRIMITIVE, UUID.randomUUID()));
       entity.addProperty(new Property(null, "Name", ValueType.PRIMITIVE, null));
       entity.addProperty(new Property(null, "AirDate", ValueType.PRIMITIVE, null));
-      
+
       entity.setMediaContentType(mediaContentType);
       entity.addProperty(new Property(null, MEDIA_PROPERTY_NAME, ValueType.PRIMITIVE, data));
-      
+
       manager.getEntityCollection(DemoEdmProvider.ES_ADVERTISEMENTS_NAME).add(entity);
     }
-    
+
     return entity;
   }
-  
+
   /* INTERNAL */
 
-  private Entity createEntity(EdmEntitySet edmEntitySet, EdmEntityType edmEntityType, Entity entity, 
+  private Entity createEntity(EdmEntitySet edmEntitySet, EdmEntityType edmEntityType, Entity entity,
       List<Entity> entityList, final String rawServiceUri) throws ODataApplicationException {
-    
+
     // 1.) Create the entity
     final Entity newEntity = new Entity();
     newEntity.setType(entity.getType());
-    
+
     // Create the new key of the entity
     int newId = 1;
     while (entityIdExists(newId, entityList)) {
       newId++;
     }
-    
+
     // Add all provided properties
     newEntity.getProperties().addAll(entity.getProperties());
-    
+
     // Add the key property
     newEntity.getProperties().add(new Property(null, "ID", ValueType.PRIMITIVE, newId));
     newEntity.setId(createId(newEntity, "ID"));
-    
+
     // 2.1.) Apply binding links
-    for(final Link link : entity.getNavigationBindings()) {
+    for (final Link link : entity.getNavigationBindings()) {
       final EdmNavigationProperty edmNavigationProperty = edmEntityType.getNavigationProperty(link.getTitle());
       final EdmEntitySet targetEntitySet = (EdmEntitySet) edmEntitySet.getRelatedBindingTarget(link.getTitle());
-      
-      if(edmNavigationProperty.isCollection() && link.getBindingLinks() != null) {
-        for(final String bindingLink : link.getBindingLinks()) {
+
+      if (edmNavigationProperty.isCollection() && link.getBindingLinks() != null) {
+        for (final String bindingLink : link.getBindingLinks()) {
           final Entity relatedEntity = readEntityByBindingLink(bindingLink, targetEntitySet, rawServiceUri);
           createLink(edmNavigationProperty, newEntity, relatedEntity);
         }
-      } else if(!edmNavigationProperty.isCollection() && link.getBindingLink() != null) {
+      } else if (!edmNavigationProperty.isCollection() && link.getBindingLink() != null) {
         final Entity relatedEntity = readEntityByBindingLink(link.getBindingLink(), targetEntitySet, rawServiceUri);
         createLink(edmNavigationProperty, newEntity, relatedEntity);
       }
     }
-    
+
     // 2.2.) Create nested entities
-    for(final Link link : entity.getNavigationLinks()) {
+    for (final Link link : entity.getNavigationLinks()) {
       final EdmNavigationProperty edmNavigationProperty = edmEntityType.getNavigationProperty(link.getTitle());
       final EdmEntitySet targetEntitySet = (EdmEntitySet) edmEntitySet.getRelatedBindingTarget(link.getTitle());
-      
-      if(edmNavigationProperty.isCollection() && link.getInlineEntitySet() != null) {
-        for(final Entity nestedEntity : link.getInlineEntitySet().getEntities()) {
+
+      if (edmNavigationProperty.isCollection() && link.getInlineEntitySet() != null) {
+        for (final Entity nestedEntity : link.getInlineEntitySet().getEntities()) {
           final Entity newNestedEntity = createEntityData(targetEntitySet, nestedEntity, rawServiceUri);
           createLink(edmNavigationProperty, newEntity, newNestedEntity);
         }
-      } else if(!edmNavigationProperty.isCollection() && link.getInlineEntity() != null){
+      } else if (!edmNavigationProperty.isCollection() && link.getInlineEntity() != null) {
         final Entity newNestedEntity = createEntityData(targetEntitySet, link.getInlineEntity(), rawServiceUri);
         createLink(edmNavigationProperty, newEntity, newNestedEntity);
       }
     }
-    
+
     entityList.add(newEntity);
-  
+
     return newEntity;
   }
 
-  private Entity readEntityByBindingLink(final String entityId, final EdmEntitySet edmEntitySet, 
+  private Entity readEntityByBindingLink(final String entityId, final EdmEntitySet edmEntitySet,
       final String rawServiceUri) throws ODataApplicationException {
-    
+
     UriResourceEntitySet entitySetResource = null;
     try {
       entitySetResource = odata.createUriHelper().parseEntityId(edm, entityId, rawServiceUri);
-      
-      if(!entitySetResource.getEntitySet().getName().equals(edmEntitySet.getName())) {
-        throw new ODataApplicationException("Execpted an entity-id for entity set " + edmEntitySet.getName() 
-          + " but found id for entity set " + entitySetResource.getEntitySet().getName(), 
-          HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
+
+      if (!entitySetResource.getEntitySet().getName().equals(edmEntitySet.getName())) {
+        throw new ODataApplicationException("Execpted an entity-id for entity set " + edmEntitySet.getName()
+            + " but found id for entity set " + entitySetResource.getEntitySet().getName(),
+            HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
       }
     } catch (DeserializerException e) {
-      throw new ODataApplicationException(entityId + " is not a valid entity-Id", 
+      throw new ODataApplicationException(entityId + " is not a valid entity-Id",
           HttpStatusCode.BAD_REQUEST.getStatusCode(), Locale.ENGLISH);
     }
 
     return readEntityData(entitySetResource.getEntitySet(), entitySetResource.getKeyPredicates());
   }
-  
+
   private EntityCollection getEntityCollection(final List<Entity> entityList) {
 
     EntityCollection retEntitySet = new EntityCollection();
     retEntitySet.getEntities().addAll(entityList);
 
     return retEntitySet;
+  }
+
+  public EntityCollection getRelatedEntityCollection(Entity sourceEntity, EdmEntityType targetEntityType) {
+    EntityCollection navigationTargetEntityCollection = new EntityCollection();
+
+    FullQualifiedName relatedEntityFqn = targetEntityType.getFullQualifiedName();
+    String sourceEntityFqn = sourceEntity.getType();
+
+    if (sourceEntityFqn.equals(DemoEdmProvider.ET_PRODUCT_FQN.getFullQualifiedNameAsString())
+        && relatedEntityFqn.equals(DemoEdmProvider.ET_CATEGORY_FQN)) {
+      navigationTargetEntityCollection.setId(createId(sourceEntity, "ID", DemoEdmProvider.NAV_TO_CATEGORY));
+      // relation Products->Category (result all categories)
+      int productID = (Integer) sourceEntity.getProperty("ID").getValue();
+      List<Entity> categoryList = manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME);
+      if (productID == 0 || productID == 1 || productID == 2) {
+        navigationTargetEntityCollection.getEntities().add(categoryList.get(0));
+      } else if (productID == 3 || productID == 4) {
+        navigationTargetEntityCollection.getEntities().add(categoryList.get(1));
+      } else if (productID == 5 || productID == 6) {
+        navigationTargetEntityCollection.getEntities().add(categoryList.get(2));
+      }
+    } else if (sourceEntityFqn.equals(DemoEdmProvider.ET_CATEGORY_FQN.getFullQualifiedNameAsString())
+        && relatedEntityFqn.equals(DemoEdmProvider.ET_PRODUCT_FQN)) {
+      navigationTargetEntityCollection.setId(createId(sourceEntity, "ID", DemoEdmProvider.NAV_TO_PRODUCTS));
+      // relation Category->Products (result all products)
+      int categoryID = (Integer) sourceEntity.getProperty("ID").getValue();
+      List<Entity> productList = manager.getEntityCollection(DemoEdmProvider.ET_PRODUCT_NAME);
+      if (categoryID == 1) {
+        // the first 2 products are notebooks
+        navigationTargetEntityCollection.getEntities().addAll(productList.subList(0, 2));
+      } else if (categoryID == 2) {
+        // the next 2 products are organizers
+        navigationTargetEntityCollection.getEntities().addAll(productList.subList(2, 4));
+      } else if (categoryID == 3) {
+        // the first 2 products are monitors
+        navigationTargetEntityCollection.getEntities().addAll(productList.subList(4, 6));
+      }
+    }
+
+    if (navigationTargetEntityCollection.getEntities().isEmpty()) {
+      return null;
+    }
+
+    return navigationTargetEntityCollection;
   }
 
   private Entity getEntity(EdmEntityType edmEntityType, List<UriParameter> keyParams, List<Entity> entityList)
@@ -398,7 +443,8 @@ public class Storage {
     Entity requestedEntity = Util.findEntity(edmEntityType, entitySet, keyParams);
 
     if (requestedEntity == null) {
-      // this variable is null if our data doesn't contain an entity for the requested key
+      // this variable is null if our data doesn't contain an entity for the requested
+      // key
       // Throw suitable exception
       throw new ODataApplicationException("Entity for requested key doesn't exist",
           HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
@@ -418,16 +464,17 @@ public class Storage {
 
     return false;
   }
-  
+
   private void updateEntity(EdmEntityType edmEntityType, List<UriParameter> keyParams, Entity updateEntity,
       HttpMethod httpMethod, List<Entity> entityList) throws ODataApplicationException {
-    
+
     Entity entity = getEntity(edmEntityType, keyParams, entityList);
     if (entity == null) {
       throw new ODataApplicationException("Entity not found", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
     }
 
-    // loop over all properties and replace the values with the values of the given payload
+    // loop over all properties and replace the values with the values of the given
+    // payload
     // Note: ignoring ComplexType, as we don't have it in our odata model
     List<Property> existingProperties = entity.getProperties();
     for (Property existingProp : existingProperties) {
@@ -447,7 +494,8 @@ public class Storage {
           // as of the OData spec, in case of PATCH, the existing property is not touched
           continue; // do nothing
         } else if (httpMethod.equals(HttpMethod.PUT)) {
-          // as of the OData spec, in case of PUT, the existing property is set to null (or to default value)
+          // as of the OData spec, in case of PUT, the existing property is set to null
+          // (or to default value)
           existingProp.setValue(existingProp.getValueType(), null);
           continue;
         }
@@ -457,19 +505,19 @@ public class Storage {
       existingProp.setValue(existingProp.getValueType(), updateProperty.getValue());
     }
   }
-  
-  private void deleteEntity(EdmEntityType edmEntityType, List<UriParameter> keyParams, List<Entity> entityList) 
+
+  private void deleteEntity(EdmEntityType edmEntityType, List<UriParameter> keyParams, List<Entity> entityList)
       throws ODataApplicationException {
-    
+
     Entity entity = getEntity(edmEntityType, keyParams, entityList);
     if (entity == null) {
-      throw new ODataApplicationException("Entity not found", HttpStatusCode.NOT_FOUND.getStatusCode(), 
+      throw new ODataApplicationException("Entity not found", HttpStatusCode.NOT_FOUND.getStatusCode(),
           Locale.ENGLISH);
     }
 
     entityList.remove(entity);
   }
-  
+
   private boolean isKey(EdmEntityType edmEntityType, String propertyName) {
     List<EdmKeyPropertyRef> keyPropertyRefs = edmEntityType.getKeyPropertyRefs();
     for (EdmKeyPropertyRef propRef : keyPropertyRefs) {
@@ -542,20 +590,20 @@ public class Storage {
   private void initCategorySampleData() {
     final List<Entity> categoryList = manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME);
     Entity entity = new Entity();
-    
+
     entity.addProperty(new Property(null, "ID", ValueType.PRIMITIVE, 0));
     entity.addProperty(new Property(null, "Name", ValueType.PRIMITIVE, "Notebooks"));
     entity.setType(DemoEdmProvider.ET_CATEGORY_FQN.getFullQualifiedNameAsString());
     entity.setId(createId(entity, "ID"));
     categoryList.add(entity);
-  
+
     entity = new Entity();
     entity.addProperty(new Property(null, "ID", ValueType.PRIMITIVE, 1));
     entity.addProperty(new Property(null, "Name", ValueType.PRIMITIVE, "Organizers"));
     entity.setType(DemoEdmProvider.ET_CATEGORY_FQN.getFullQualifiedNameAsString());
     entity.setId(createId(entity, "ID"));
     categoryList.add(entity);
-  
+
     entity = new Entity();
     entity.addProperty(new Property(null, "ID", ValueType.PRIMITIVE, 2));
     entity.addProperty(new Property(null, "Name", ValueType.PRIMITIVE, "Monitors"));
@@ -563,8 +611,8 @@ public class Storage {
     entity.setId(createId(entity, "ID"));
     categoryList.add(entity);
   }
-  
-private void initAdvertisementSampleData() {
+
+  private void initAdvertisementSampleData() {
     final List<Entity> advertisements = manager.getEntityCollection(DemoEdmProvider.ES_ADVERTISEMENTS_NAME);
 
     Entity entity = new Entity();
@@ -589,30 +637,30 @@ private void initAdvertisementSampleData() {
     entity.setId(createId(entity, "ID"));
     advertisements.add(entity);
   }
-  
+
   private void linkProductsAndCategories(final int numberOfProducts) {
     final List<Entity> productList = manager.getEntityCollection(DemoEdmProvider.ES_PRODUCTS_NAME);
     final List<Entity> categoryList = manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME);
-    
-    if(numberOfProducts >= 1) {
+
+    if (numberOfProducts >= 1) {
       setLink(productList.get(0), "Category", categoryList.get(0));
     }
-    if(numberOfProducts >= 2) {
+    if (numberOfProducts >= 2) {
       setLink(productList.get(1), "Category", categoryList.get(0));
     }
-    if(numberOfProducts >= 3) {
+    if (numberOfProducts >= 3) {
       setLink(productList.get(2), "Category", categoryList.get(1));
     }
-    if(numberOfProducts >= 4) {
+    if (numberOfProducts >= 4) {
       setLink(productList.get(3), "Category", categoryList.get(1));
     }
-    if(numberOfProducts >= 5) {
+    if (numberOfProducts >= 5) {
       setLink(productList.get(4), "Category", categoryList.get(2));
     }
-    if(numberOfProducts >= 6) {
+    if (numberOfProducts >= 6) {
       setLink(productList.get(5), "Category", categoryList.get(2));
     }
-    
+
     if (numberOfProducts >= 1) {
       setLinks(categoryList.get(0), "Products",
           productList.subList(0, Math.min(2, numberOfProducts)).toArray(new Entity[0]));
@@ -655,7 +703,7 @@ private void initAdvertisementSampleData() {
     }
     return entity.getType();
   }
-  
+
   private void createLink(final EdmNavigationProperty navigationProperty, final Entity srcEntity,
       final Entity destEntity) {
     setLink(navigationProperty, srcEntity, destEntity);
@@ -665,7 +713,7 @@ private void initAdvertisementSampleData() {
       setLink(partnerNavigationProperty, destEntity, srcEntity);
     }
   }
-  
+
   private void setLink(final EdmNavigationProperty navigationProperty, final Entity srcEntity,
       final Entity targetEntity) {
     if (navigationProperty.isCollection()) {
@@ -674,7 +722,7 @@ private void initAdvertisementSampleData() {
       setLink(srcEntity, navigationProperty.getName(), targetEntity);
     }
   }
-  
+
   private void setLink(final Entity entity, final String navigationPropertyName, final Entity target) {
     Link link = entity.getNavigationLink(navigationPropertyName);
     if (link == null) {
@@ -683,17 +731,17 @@ private void initAdvertisementSampleData() {
       link.setType(Constants.ENTITY_NAVIGATION_LINK_TYPE);
       link.setTitle(navigationPropertyName);
       link.setHref(target.getId().toASCIIString());
-      
+
       entity.getNavigationLinks().add(link);
     }
     link.setInlineEntity(target);
   }
 
   private void setLinks(final Entity entity, final String navigationPropertyName, final Entity... targets) {
-    if(targets.length == 0) {
+    if (targets.length == 0) {
       return;
     }
-    
+
     Link link = entity.getNavigationLink(navigationPropertyName);
     if (link == null) {
       link = new Link();
@@ -705,10 +753,18 @@ private void initAdvertisementSampleData() {
       EntityCollection target = new EntityCollection();
       target.getEntities().addAll(Arrays.asList(targets));
       link.setInlineEntitySet(target);
-      
+
       entity.getNavigationLinks().add(link);
     } else {
       link.getInlineEntitySet().getEntities().addAll(Arrays.asList(targets));
     }
+  }
+
+  public Entity getRelatedEntity(Entity entity, EdmEntityType relatedEntityType) {
+    EntityCollection collection = getRelatedEntityCollection(entity, relatedEntityType);
+    if (collection.getEntities().isEmpty()) {
+      return null;
+    }
+    return collection.getEntities().get(0);
   }
 }
