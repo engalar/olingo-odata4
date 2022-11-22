@@ -209,7 +209,8 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
     // 3.7.) $expand
     // Nested system query options are not implemented
     // validateNestedExpxandSystemQueryOptions(uriInfo.getExpandOption());
-    // http://localhost:8080/DemoService.svc/Products?$select=ID,Name,Description&$filter=(ID eq 0)&$expand=Category($select=ID)
+    // http://localhost:8080/DemoService.svc/Products?$select=ID,Name,Description&$filter=(ID
+    // eq 0)&$expand=Category($select=ID)
     ExpandOption expandOption = uriInfo.getExpandOption();
     if (expandOption != null) {
       // retrieve the EdmNavigationProperty from the expand expression
@@ -248,6 +249,12 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
         List<Entity> entityList = entityCollection.getEntities();
         for (Entity entity : entityList) {
           Link link = new Link();
+          Link existLink = entity.getNavigationLink(navPropName);
+          if (existLink != null) {
+            link = existLink;
+          } else {
+            entity.getNavigationLinks().add(link);
+          }
           link.setTitle(navPropName);
           link.setType(Constants.ENTITY_NAVIGATION_LINK_TYPE);
           link.setRel(Constants.NS_ASSOCIATION_LINK_REL + navPropName);
@@ -266,7 +273,6 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
           }
 
           // set the link - containing the expanded data - to the current entity
-          entity.getNavigationLinks().add(link);
         }
       }
     }

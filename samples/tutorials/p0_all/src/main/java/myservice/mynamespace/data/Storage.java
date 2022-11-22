@@ -400,14 +400,11 @@ public class Storage {
         && relatedEntityFqn.equals(DemoEdmProvider.ET_CATEGORY_FQN)) {
       navigationTargetEntityCollection.setId(createId(sourceEntity, "ID", DemoEdmProvider.NAV_TO_CATEGORY));
       // relation Products->Category (result all categories)
-      int productID = (Integer) sourceEntity.getProperty("ID").getValue();
-      List<Entity> categoryList = manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME);
-      if (productID == 0 || productID == 1 || productID == 2) {
-        navigationTargetEntityCollection.getEntities().add(categoryList.get(0));
-      } else if (productID == 3 || productID == 4) {
-        navigationTargetEntityCollection.getEntities().add(categoryList.get(1));
-      } else if (productID == 5 || productID == 6) {
-        navigationTargetEntityCollection.getEntities().add(categoryList.get(2));
+      Link navigationLink = sourceEntity.getNavigationLink(relatedEntityFqn.getName());
+      if (navigationLink != null) {
+        Integer relatedId = Integer.parseInt(navigationLink.getHref().split("\\(")[1].split("\\)")[0]);
+        List<Entity> categoryList = manager.getEntityCollection(DemoEdmProvider.ES_CATEGORIES_NAME);
+        navigationTargetEntityCollection.getEntities().add(categoryList.get(relatedId));
       }
     } else if (sourceEntityFqn.equals(DemoEdmProvider.ET_CATEGORY_FQN.getFullQualifiedNameAsString())
         && relatedEntityFqn.equals(DemoEdmProvider.ET_PRODUCT_FQN)) {
@@ -475,9 +472,8 @@ public class Storage {
     }
 
     for (Link updateLink : updateEntity.getNavigationLinks()) {
-      if ("application/atom+xml;type=entry".equals(updateLink.getType())) {
+      if (!edmEntityType.getNavigationProperty(updateLink.getTitle()).isCollection()) {
         String pp = (String) updateLink.getInlineEntity().getProperty(Constantsv01.JSON_ID).getValue();
-        System.out.println(pp);
         String[] split = pp.split("\\(");
         String[] split2 = split[1].split("\\)");
         setLink(entity, updateLink.getTitle(),
@@ -742,11 +738,11 @@ public class Storage {
       link.setRel(Constants.NS_NAVIGATION_LINK_REL + navigationPropertyName);
       link.setType(Constants.ENTITY_NAVIGATION_LINK_TYPE);
       link.setTitle(navigationPropertyName);
-      link.setHref(target.getId().toASCIIString());
 
       entity.getNavigationLinks().add(link);
     }
     link.setInlineEntity(target);
+    link.setHref(target.getId().toASCIIString());
   }
 
   private void setLinks(final Entity entity, final String navigationPropertyName, final Entity... targets) {
