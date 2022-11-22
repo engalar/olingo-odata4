@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.olingo.commons.api.constants.Constantsv01;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.api.edm.provider.CsdlAbstractEdmProvider;
@@ -181,6 +182,8 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
     // this method is called for each EntityType that are configured in the Schema
     CsdlEntityType entityType = null;
 
+    CsdlProperty metaId = new CsdlProperty().setName(Constantsv01.JSON_ID)
+        .setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());
     if (entityTypeName.equals(ET_PRODUCT_FQN)) {
       // create EntityType properties
       CsdlProperty id = new CsdlProperty().setName("ID")
@@ -205,7 +208,7 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
       // configure EntityType
       entityType = new CsdlEntityType();
       entityType.setName(ET_PRODUCT_NAME);
-      entityType.setProperties(Arrays.asList(id, name, description));
+      entityType.setProperties(Arrays.asList(metaId, id, name, description));
       entityType.setKey(Arrays.asList(propertyRef));
       entityType.setNavigationProperties(navPropList);
 
@@ -230,7 +233,7 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
       // configure EntityType
       entityType = new CsdlEntityType();
       entityType.setName(ET_CATEGORY_NAME);
-      entityType.setProperties(Arrays.asList(id, name));
+      entityType.setProperties(Arrays.asList(metaId, id, name));
       entityType.setKey(Arrays.asList(propertyRef));
       entityType.setNavigationProperties(navPropList);
     } else if (entityTypeName.equals(ET_ADVERTISEMENT_FQN)) {

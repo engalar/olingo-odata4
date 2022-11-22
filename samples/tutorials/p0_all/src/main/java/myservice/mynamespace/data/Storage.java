@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import org.apache.olingo.commons.api.Constants;
+import org.apache.olingo.commons.api.constants.Constantsv01;
 import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.data.Link;
@@ -471,6 +472,17 @@ public class Storage {
     Entity entity = getEntity(edmEntityType, keyParams, entityList);
     if (entity == null) {
       throw new ODataApplicationException("Entity not found", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ENGLISH);
+    }
+
+    for (Link updateLink : updateEntity.getNavigationLinks()) {
+      if ("application/atom+xml;type=entry".equals(updateLink.getType())) {
+        String pp = (String) updateLink.getInlineEntity().getProperty(Constantsv01.JSON_ID).getValue();
+        System.out.println(pp);
+        String[] split = pp.split("\\(");
+        String[] split2 = split[1].split("\\)");
+        setLink(entity, updateLink.getTitle(),
+            manager.getEntityCollection(split[0]).get(Integer.parseInt(split2[0])));
+      }
     }
 
     // loop over all properties and replace the values with the values of the given

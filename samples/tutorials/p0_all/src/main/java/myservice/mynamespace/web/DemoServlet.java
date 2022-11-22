@@ -46,6 +46,7 @@ public class DemoServlet extends HttpServlet {
 
   private static final long serialVersionUID = 1L;
   private static final Logger LOG = LoggerFactory.getLogger(DemoServlet.class);
+  private Storage storage;
 
 
   @Override
@@ -55,7 +56,7 @@ public class DemoServlet extends HttpServlet {
     
     try {
       HttpSession session = req.getSession(true);
-      Storage storage = (Storage) session.getAttribute(Storage.class.getName());
+      // Storage storage = (Storage) session.getAttribute(Storage.class.getName());
       if (storage == null) {
         storage = new Storage(odata, edm.getEdm());
         session.setAttribute(Storage.class.getName(), storage);
